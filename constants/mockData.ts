@@ -78,6 +78,7 @@ export const MOCK_MATCHES = [
         skillLevel: 'Intermediate',
         playersJoined: 7,
         maxPlayers: 10,
+        hostId: 'mock-u1',
         host: {
             name: 'Priya S.',
             avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026024d'
@@ -94,6 +95,7 @@ export const MOCK_MATCHES = [
         skillLevel: 'All Levels',
         playersJoined: 3,
         maxPlayers: 5,
+        hostId: 'mock-u2',
         host: {
             name: 'Rahul K.',
             avatar: 'https://i.pravatar.cc/150?u=a042581f4e29026704d'
@@ -110,6 +112,7 @@ export const MOCK_MATCHES = [
         skillLevel: 'Advanced',
         playersJoined: 2,
         maxPlayers: 4,
+        hostId: 'mock-u3',
         host: {
             name: 'Amit V.',
             avatar: 'https://i.pravatar.cc/150?u=a04258114e29026702d'

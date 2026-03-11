@@ -7,12 +7,14 @@ import { CATEGORIES } from '@/constants/mockData';
 import { VenueCard } from '@/components/VenueCard';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useVenues } from '@/hooks/use-venues';
+import { useAuth } from '@/context/AuthContext';
 
 export default function HomeScreen() {
   const router = useRouter();
   const theme = useTheme();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
+  const { user } = useAuth();
   const { venues, loading, refresh } = useVenues(selectedCategory ?? undefined);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -85,7 +87,7 @@ export default function HomeScreen() {
             contentFit="contain"
           />
           <View>
-            <Text style={[styles.greeting, { color: theme.icon }]}>Hello, Player!</Text>
+            <Text style={[styles.greeting, { color: theme.icon }]}>Hello, {user?.name || 'Player'}!</Text>
             <Text style={[styles.title, { color: theme.tint }]}>Slotify</Text>
           </View>
         </View>

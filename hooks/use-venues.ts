@@ -80,19 +80,39 @@ export function useVenue(id: string) {
         setError(null);
 
         try {
-            const { data, error: dbError } = await supabase
+            // Fetch venue details
+            const { data: venueData, error: venueError } = await supabase
                 .from('venues')
                 .select('*')
                 .eq('id', id)
                 .single();
 
-            if (dbError) {
+            if (venueError) {
                 const mock = MOCK_VENUES.find(v => v.id === id);
                 if (mock) setVenue(mock);
-                else setError(dbError.message);
-            } else {
-                setVenue(dbRowToVenue(data as Record<string, unknown>));
+                else setError(venueError.message);
+                return;
             }
+
+            // Fetch slots for this venue
+            const { data: slotsData, error: slotsError } = await supabase
+                .from('slots')
+                .select('*')
+                .eq('venue_id', id)
+                .order('time', { ascending: true });
+
+            if (slotsError) {
+                console.warn('[useVenue] Failed to fetch slots:', slotsError.message);
+            }
+
+            const venueObj = dbRowToVenue(venueData as Record<string, unknown>);
+            venueObj.slots = (slotsData || []).map(s => ({
+                id: s.id,
+                time: s.time,
+                isAvailable: s.is_available
+            }));
+
+            setVenue(venueObj);
         } catch (e) {
             const mock = MOCK_VENUES.find(v => v.id === id);
             if (mock) setVenue(mock);

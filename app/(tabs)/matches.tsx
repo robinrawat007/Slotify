@@ -22,7 +22,7 @@ export default function MatchesScreen() {
         setRefreshing(false);
     }, [refresh]);
 
-    const myMatches = matches.filter(m => m.host?.name === user?.name);
+    const myMatches = matches.filter(m => m.hostId === user?.id);
     const displayMatches = activeTab === 'discover' ? matches : myMatches;
 
     const isFull = (match: Match) => match.playersJoined >= match.maxPlayers;

@@ -232,7 +232,7 @@ export default function ProfileScreen() {
             </View>
 
             <View style={styles.menuContainer}>
-                <Pressable style={styles.menuItem}>
+                <Pressable style={styles.menuItem} onPress={() => Alert.alert('Coming Soon', 'Profile editing will be available in the next update!')}>
                     <View style={styles.menuItemLeft}>
                         <View style={[styles.menuIconBg, { backgroundColor: theme.icon + '15' }]}>
                             <IconSymbol name="person.fill" size={20} color={theme.icon} />
@@ -242,7 +242,7 @@ export default function ProfileScreen() {
                     <IconSymbol name="chevron.right" size={16} color={theme.icon} />
                 </Pressable>
 
-                <Pressable style={styles.menuItem}>
+                <Pressable style={styles.menuItem} onPress={() => Alert.alert('Coming Soon', 'Payment management is coming soon!')}>
                     <View style={styles.menuItemLeft}>
                         <View style={[styles.menuIconBg, { backgroundColor: theme.icon + '15' }]}>
                             <IconSymbol name="creditcard.fill" size={20} color={theme.icon} />
@@ -252,7 +252,7 @@ export default function ProfileScreen() {
                     <IconSymbol name="chevron.right" size={16} color={theme.icon} />
                 </Pressable>
 
-                <Pressable style={styles.menuItem}>
+                <Pressable style={styles.menuItem} onPress={() => Alert.alert('Coming Soon', 'Your favorites will appear here soon!')}>
                     <View style={styles.menuItemLeft}>
                         <View style={[styles.menuIconBg, { backgroundColor: theme.icon + '15' }]}>
                             <IconSymbol name="heart.fill" size={20} color={theme.icon} />
@@ -262,7 +262,7 @@ export default function ProfileScreen() {
                     <IconSymbol name="chevron.right" size={16} color={theme.icon} />
                 </Pressable>
 
-                {email === 'admin@slotify.com' && (
+                {isAdmin && (
                     <Pressable style={styles.menuItem} onPress={() => router.push('/admin' as any)}>
                         <View style={styles.menuItemLeft}>
                             <View style={[styles.menuIconBg, { backgroundColor: theme.icon + '15' }]}>
@@ -274,7 +274,7 @@ export default function ProfileScreen() {
                     </Pressable>
                 )}
 
-                <Pressable style={styles.menuItem} onPress={handleLogout}>
+                <Pressable style={styles.menuItem} onPress={logout}>
                     <View style={styles.menuItemLeft}>
                         <View style={[styles.menuIconBg, { backgroundColor: '#EF444415' }]}>
                             <IconSymbol name="rectangle.portrait.and.arrow.right" size={20} color="#EF4444" />

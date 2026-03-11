@@ -41,6 +41,7 @@ export interface Match {
     skillLevel: string;
     playersJoined: number;
     maxPlayers: number;
+    hostId: string;
     host: MatchHost;
 }
 

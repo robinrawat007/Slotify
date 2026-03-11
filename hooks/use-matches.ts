@@ -36,6 +36,7 @@ export function useMatches() {
                         skillLevel: row.skill_level as string,
                         playersJoined: row.players_joined as number,
                         maxPlayers: row.max_players as number,
+                        hostId: row.host_id as string,
                         host: {
                             name: profile?.name ?? 'Unknown',
                             avatar: profile?.avatar_url ?? `https://i.pravatar.cc/150?u=${row.host_id}`,
