@@ -40,7 +40,7 @@ export default function ProfileScreen() {
             <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
                 <View style={styles.authContainer}>
                     <Image
-                        source={require('@/assets/images/logo.png')}
+                        source={require('@/assets/images/logo-icon.png')}
                         style={{ width: 100, height: 100, marginBottom: 16, resizeMode: 'contain' }}
                     />
                     <Text style={[styles.authTitle, { color: theme.text }]}>Welcome to Slotify</Text>

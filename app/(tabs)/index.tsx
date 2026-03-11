@@ -81,7 +81,7 @@ export default function HomeScreen() {
       <View style={styles.header}>
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <Image
-            source={require('@/assets/images/logo.png')}
+            source={require('@/assets/images/logo-icon.png')}
             style={{ width: 40, height: 40, marginRight: 10, resizeMode: 'contain' }}
           />
           <View>
