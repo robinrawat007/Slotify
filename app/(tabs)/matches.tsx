@@ -6,6 +6,7 @@ import { useRouter } from 'expo-router';
 import type { Match } from '@/constants/types';
 import { useMatches } from '@/hooks/use-matches';
 import { useAuth } from '@/context/AuthContext';
+import { Avatar } from '@/components/Avatar';
 
 export default function MatchesScreen() {
     const theme = useTheme();
@@ -52,7 +53,11 @@ export default function MatchesScreen() {
 
                 <View style={styles.cardFooter}>
                     <View style={styles.hostInfo}>
-                        <Image source={{ uri: match.host.avatar }} style={styles.avatar} />
+                        <Avatar
+                            name={match.host.name}
+                            avatarUrl={match.host.avatar}
+                            size={32}
+                        />
                         <View>
                             <Text style={[styles.hostName, { color: theme.text }]}>Hosted by {match.host.name}</Text>
                             <Text style={[styles.skillText, { color: theme.icon }]}>Skill: {match.skillLevel}</Text>

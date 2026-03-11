@@ -5,6 +5,7 @@ import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
 import { useAuth } from '@/context/AuthContext';
+import { Avatar } from '@/components/Avatar';
 
 export default function ProfileScreen() {
     const theme = useTheme();
@@ -150,18 +151,19 @@ export default function ProfileScreen() {
             </View>
 
             <View style={styles.profileHeader}>
-                <Image
-                    source={{ uri: email === 'admin@slotify.com' ? 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=200&auto=format&fit=crop' : 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?q=80&w=200&auto=format&fit=crop' }}
-                    style={styles.avatar}
+                <Avatar
+                    name={user?.name || 'User'}
+                    avatarUrl={user?.avatar}
+                    size={72}
                 />
                 <View style={styles.profileInfo}>
                     <Text style={[styles.profileName, { color: theme.text }]}>
-                        {email === 'admin@slotify.com' ? 'Admin User' : 'Robin Singh'}
+                        {user?.name}
                     </Text>
-                    <Text style={[styles.profileEmail, { color: theme.icon }]}>{email}</Text>
+                    <Text style={[styles.profileEmail, { color: theme.icon }]}>{user?.email}</Text>
                     <View style={[styles.skillBadge, { backgroundColor: theme.tint + '20' }]}>
                         <Text style={[styles.skillText, { color: theme.tint }]}>
-                            {email === 'admin@slotify.com' ? 'Venue Owner' : 'Intermediate • Football'}
+                            {user?.role === 'admin' ? '🏟️ Venue Owner' : '⚽ Player'}
                         </Text>
                     </View>
                 </View>
