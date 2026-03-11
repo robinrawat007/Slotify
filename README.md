@@ -1,50 +1,88 @@
-# Welcome to your Expo app 👋
+# 🏟️ Slotify 
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+**Slotify** is a fully-featured sports venue slot-booking mobile app built with **React Native**, **Expo Router**, and **TypeScript**. Designed for both players and venue owners, Slotify provides a seamless experience for discovering sports venues, booking slots, and hosting community matches.
 
-## Get started
+## ✨ Features
 
-1. Install dependencies
+- **User Authentication**: Secure Login/Sign-up flow with mock Admin/User credentials.
+- **Venue Discovery & Booking**: 
+   - Browse nearby turfs (Football, Cricket, Tennis, etc.).
+   - View venue details, ratings, reviews, and a Map overview.
+   - Proceed to responsive slot booking interfaces with dynamic pricing calculation.
+- **Matchmaking & Hosting**: 
+   - Host community matches and set player limits, skill levels, and price per player.
+   - Join existing matches and chat with other players in a real-time lobby simulation.
+- **Admin Dashboard**:
+   - Venue owners have an exclusive dashboard to view daily revenue, upcoming bookings, and manage sports grounds.
+- **Optimized UI & UX**:
+   - Heavy lists use `<FlatList>` for buttery smooth 60fps scrolling.
+   - Pull-To-Refresh functionality implemented natively.
+   - Dark Mode support matching your device's native OS theme.
+   - Native OS Share API integration to text message venue locations.
+   - Smooth transitions and edge case handling (Empty States).
 
+## 🚀 Getting Started
+
+### Prerequisites
+- [Node.js](https://nodejs.org/) (v18 or higher recommended)
+- [Expo CLI](https://docs.expo.dev/get-started/installation/) (`npm install -g expo-cli`)
+- Expo Go App on your iOS or Android device (for physical device testing)
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/robinrawat007/Slotify.git
+   cd Slotify/slotify
+   ```
+
+2. **Install dependencies**
    ```bash
    npm install
    ```
 
-2. Start the app
-
+3. **Start the Expo server**
    ```bash
    npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+4. **Preview the App**
+   - Scan the QR code from your terminal in the **Expo Go** app on your phone.
+   - Press `a` to open in an Android Emulator.
+   - Press `i` to open in an iOS Simulator.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## 🔐 Demo Credentials
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+Slotify uses a mock authentication layer. You can use the following credentials to explore different roles:
 
-## Get a fresh project
+- **Venue Owner (Admin):**
+   - Email: `admin@slotify.com`
+   - Password: `<any characters>`
+- **Standard Player (User):**
+   - Email: `user@slotify.com`
+   - Password: `<any characters>`
 
-When you're ready, run:
+## 🛠️ Built With
+
+- **Framework:** React Native + Expo
+- **Routing:** Expo Router (File-based navigation)
+- **Language:** TypeScript
+- **Styling:** React Native Base Stylesheet (Theme-aware and dynamic)
+- **UI Icons:** `@expo/vector-icons` (SF Symbols / Material Icons)
+
+## 📁 Project Structure
 
 ```bash
-npm run reset-project
+slotify/
+├── app/                  # Expo Router file-based routing entry points
+│   ├── (tabs)/           # Main Application Bottom Tabs Navigation
+│   ├── matches/          # Match Lobby and Creation flow
+│   └── venue/            # Venue Details Screens
+├── components/           # Reusable UI components (VenueCard, Maps)
+├── constants/            # Mock data, App Theme (Dark/Light mode) colors
+├── hooks/                # Custom React Hooks (useColorScheme)
+└── assets/               # Local app icons and fonts
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+## 📜 License
+This project is licensed under the MIT License.

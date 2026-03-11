@@ -1,98 +1,216 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import React, { useState } from 'react';
+import { StyleSheet, View, Text, ScrollView, Pressable, SafeAreaView, Platform, StatusBar, FlatList, RefreshControl } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Colors } from '@/constants/theme';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { CATEGORIES, MOCK_VENUES } from '@/constants/mockData';
+import { VenueCard } from '@/components/VenueCard';
+import { IconSymbol } from '@/components/ui/icon-symbol';
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const router = useRouter();
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? 'light'];
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => setRefreshing(false), 1000);
+  }, []);
+
+  const filteredVenues = selectedCategory
+    ? MOCK_VENUES.filter(v => v.sports.includes(selectedCategory))
+    : MOCK_VENUES;
+
+  const renderHeader = () => (
+    <>
+      {/* Search Bar Placeholder */}
+      <Pressable
+        style={[styles.searchBar, { backgroundColor: theme.icon + '15' }]}
+        onPress={() => router.push('/search')}
+      >
+        <IconSymbol name="magnifyingglass" size={20} color={theme.icon} />
+        <Text style={[styles.searchText, { color: theme.icon }]}>Search for venues, sports...</Text>
+      </Pressable>
+
+      {/* Categories */}
+      <View style={styles.sectionHeader}>
+        <Text style={[styles.sectionTitle, { color: theme.text }]}>Explore Sports</Text>
+      </View>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.categoriesContainer}
+      >
+        {CATEGORIES.map(category => {
+          const isSelected = selectedCategory === category.id;
+          return (
+            <Pressable
+              key={category.id}
+              style={[
+                styles.categoryCard,
+                { backgroundColor: isSelected ? theme.tint : theme.icon + '15' }
+              ]}
+              onPress={() => setSelectedCategory(isSelected ? null : category.id)}
+            >
+              <Text style={styles.categoryIcon}>{category.icon}</Text>
+              <Text style={[
+                styles.categoryName,
+                { color: isSelected ? '#fff' : theme.text }
+              ]}>
+                {category.name}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+
+      {/* Featured Venues */}
+      <View style={styles.sectionHeader}>
+        <Text style={[styles.sectionTitle, { color: theme.text }]}>Popular Venues</Text>
+        <Pressable onPress={() => router.push('/search')}>
+          <Text style={[styles.seeAll, { color: theme.tint }]}>See All</Text>
+        </Pressable>
+      </View>
+    </>
+  );
+
+  return (
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
+      <View style={styles.header}>
+        <View>
+          <Text style={[styles.greeting, { color: theme.icon }]}>Hello, Player!</Text>
+          <Text style={[styles.title, { color: theme.tint }]}>Slotify</Text>
+        </View>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+          <Pressable style={styles.iconBtn} onPress={() => router.push('/notifications')}>
+            <IconSymbol name="bell.fill" size={24} color={theme.text} />
+            <View style={[styles.badge, { backgroundColor: '#EF4444' }]} />
+          </Pressable>
+          <Pressable style={styles.profileBtn} onPress={() => router.push('/(tabs)/profile')}>
+            <IconSymbol name="person.crop.circle.fill" size={36} color={theme.tint} />
+          </Pressable>
+        </View>
+      </View>
+
+      <FlatList
+        data={filteredVenues}
+        keyExtractor={(item) => item.id}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+        ListHeaderComponent={renderHeader}
+        renderItem={({ item }) => (
+          <VenueCard
+            venue={item}
+            onPress={() => router.push({ pathname: '/venue/[id]', params: { id: item.id } })}
+          />
+        )}
+        ListEmptyComponent={
+          <View style={{ padding: 20, alignItems: 'center' }}>
+            <Text style={{ color: theme.icon }}>No venues found for this sport.</Text>
+          </View>
+        }
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.tint} />
+        }
+      />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
+  safeArea: {
+    flex: 1,
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 20,
+  },
+  greeting: {
+    fontSize: 14,
+    fontWeight: '500',
+    marginBottom: 4,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: '800',
+  },
+  profileBtn: {
+    padding: 2,
+  },
+  iconBtn: {
+    padding: 4,
+    position: 'relative',
+  },
+  badge: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    borderWidth: 2,
+    borderColor: '#fff', // Gets overriden in theme mode if needed
+  },
+  scrollContent: {
+    paddingBottom: 100, // padding for bottom tabs
+  },
+  searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    marginHorizontal: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginBottom: 24,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
+  searchText: {
+    marginLeft: 10,
+    fontSize: 16,
   },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+  },
+  seeAll: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  categoriesContainer: {
+    paddingHorizontal: 16,
+    marginBottom: 32,
+    gap: 12,
+  },
+  categoryCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 24,
+    marginHorizontal: 4,
+  },
+  categoryIcon: {
+    fontSize: 18,
+    marginRight: 8,
+  },
+  categoryName: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  venuesContainer: {
+    paddingHorizontal: 20,
   },
 });
