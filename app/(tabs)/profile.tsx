@@ -74,7 +74,8 @@ export default function ProfileScreen() {
                 <View style={styles.authContainer}>
                     <Image
                         source={require('@/assets/images/logo-icon.png')}
-                        style={{ width: 100, height: 100, marginBottom: 16, resizeMode: 'contain' }}
+                        style={{ width: 100, height: 100, marginBottom: 16 }}
+                        contentFit="contain"
                     />
                     <Text style={[styles.authTitle, { color: theme.text }]}>Welcome to Slotify</Text>
                     <Text style={[styles.authSubtitle, { color: theme.icon }]}>

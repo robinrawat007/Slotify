@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Text, ScrollView, Pressable, SafeAreaView, Platform, StatusBar, FlatList, RefreshControl, Image, ActivityIndicator } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, Pressable, SafeAreaView, Platform, StatusBar, FlatList, RefreshControl, ActivityIndicator } from 'react-native';
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useTheme } from '@/hooks/use-theme';
 import { CATEGORIES } from '@/constants/mockData';
@@ -80,7 +81,8 @@ export default function HomeScreen() {
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
           <Image
             source={require('@/assets/images/logo-icon.png')}
-            style={{ width: 40, height: 40, marginRight: 10, resizeMode: 'contain' }}
+            style={{ width: 40, height: 40, marginRight: 10 }}
+            contentFit="contain"
           />
           <View>
             <Text style={[styles.greeting, { color: theme.icon }]}>Hello, Player!</Text>
