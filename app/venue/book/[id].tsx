@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, SafeAreaView, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { MOCK_VENUES } from '@/constants/mockData';
+import { useVenue } from '@/hooks/use-venues';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { useAuth } from '@/context/AuthContext';
 import { useRequireAuth } from '@/hooks/use-require-auth';
 
 // Generate some upcoming dates for mockup
@@ -15,7 +16,7 @@ const getUpcomingDates = () => {
         const d = new Date(today);
         d.setDate(today.getDate() + i);
         dates.push({
-            id: d.toISOString(),
+            id: d.toISOString().split('T')[0], // Use YYYY-MM-DD for consistency
             dateObj: d,
             dayName: d.toLocaleDateString('en-US', { weekday: 'short' }),
             dateNum: d.getDate(),
@@ -31,26 +32,34 @@ export default function BookSlotScreen() {
     const colorScheme = useColorScheme();
     const theme = Colors[colorScheme ?? 'light'];
     const { user } = useRequireAuth();
+    const { venue, loading, error } = useVenue(id as string);
 
-    const venue = MOCK_VENUES.find(v => v.id === id);
     const [dates] = useState(getUpcomingDates());
     const [selectedDate, setSelectedDate] = useState(dates[0].id);
     const [selectedSlots, setSelectedSlots] = useState<string[]>([]);
 
-    if (!user) return null; // redirect in progress
-
-
-    if (!venue) {
+    if (!user || loading) {
         return (
-            <View style={styles.errorContainer}>
-                <Text style={{ color: theme.text }}>Venue not found</Text>
+            <View style={[styles.errorContainer, { backgroundColor: theme.background }]}>
+                <ActivityIndicator size="large" color={theme.tint} />
+            </View>
+        );
+    }
+
+    if (error || !venue) {
+        return (
+            <View style={[styles.errorContainer, { backgroundColor: theme.background }]}>
+                <Text style={{ color: theme.text }}>{error || 'Venue not found'}</Text>
+                <Pressable onPress={() => router.back()} style={{ marginTop: 16 }}>
+                    <Text style={{ color: theme.tint }}>Go Back</Text>
+                </Pressable>
             </View>
         );
     }
 
     const toggleSlot = (slotId: string) => {
-        setSelectedSlots(prev =>
-            prev.includes(slotId) ? prev.filter(id => id !== slotId) : [...prev, slotId]
+        setSelectedSlots((prev: string[]) =>
+            prev.includes(slotId) ? prev.filter((id: string) => id !== slotId) : [...prev, slotId]
         );
     };
 

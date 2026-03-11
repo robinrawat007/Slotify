@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, SafeAreaView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, Pressable, SafeAreaView, ActivityIndicator, Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { MOCK_VENUES } from '@/constants/mockData';
+import { useVenue } from '@/hooks/use-venues';
+import { useBookings } from '@/hooks/use-bookings';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { IconSymbol } from '@/components/ui/icon-symbol';
@@ -11,15 +12,28 @@ export default function BookingConfirmScreen() {
     const router = useRouter();
     const colorScheme = useColorScheme();
     const theme = Colors[colorScheme ?? 'light'];
+
+    const { venue, loading: venueLoading } = useVenue(id as string);
+    const { createBooking } = useBookings();
     const [isBooking, setIsBooking] = useState(false);
 
-    const venue = MOCK_VENUES.find(v => v.id === id);
     const selectedSlots = typeof slots === 'string' ? slots.split(',') : [];
+
+    if (venueLoading) {
+        return (
+            <View style={[styles.errorContainer, { backgroundColor: theme.background }]}>
+                <ActivityIndicator size="large" color={theme.tint} />
+            </View>
+        );
+    }
 
     if (!venue || selectedSlots.length === 0) {
         return (
-            <View style={styles.errorContainer}>
+            <View style={[styles.errorContainer, { backgroundColor: theme.background }]}>
                 <Text style={{ color: theme.text }}>Invalid booking details</Text>
+                <Pressable onPress={() => router.back()} style={{ marginTop: 16 }}>
+                    <Text style={{ color: theme.tint }}>Go Back</Text>
+                </Pressable>
             </View>
         );
     }
@@ -27,7 +41,7 @@ export default function BookingConfirmScreen() {
     const dateObj = new Date(typeof date === 'string' ? date : Date.now());
     const dateStr = dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
-    // Find slot times from mock data
+    // Find slot times from fetched venue data
     const slotTimes = selectedSlots.map(sId => {
         const s = venue.slots.find(x => x.id === sId);
         return s ? s.time : sId;
@@ -36,17 +50,26 @@ export default function BookingConfirmScreen() {
     const totalAmount = selectedSlots.length * venue.pricePerHour;
     const totalPayable = totalAmount + 20;
 
-    const handleConfirm = () => {
+    const handleConfirm = async () => {
         setIsBooking(true);
-        setTimeout(() => {
-            setIsBooking(false);
-            // Generate a mock booking ID
-            const mockBookingId = 'bk_' + Math.random().toString(36).substr(2, 9);
+        const { data, error } = await createBooking({
+            venueId: venue.id,
+            slotIds: selectedSlots,
+            date: typeof date === 'string' ? date : new Date().toISOString().split('T')[0],
+            totalAmount: totalPayable
+        });
+
+        setIsBooking(false);
+
+        if (error) {
+            Alert.alert('Booking Failed', error);
+        } else {
+            // Success! Direct to a mock payment/success screen for now
             router.push({
                 pathname: '/booking/payment/[id]',
-                params: { id: mockBookingId, amount: totalPayable.toString(), bookingId: mockBookingId }
+                params: { id: data as string, amount: totalPayable.toString(), bookingId: data as string }
             });
-        }, 1000);
+        }
     };
 
     return (

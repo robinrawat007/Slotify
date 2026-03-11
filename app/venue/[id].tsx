@@ -1,7 +1,7 @@
-import React from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, Pressable, Platform, StatusBar, Share } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Platform, StatusBar, Share, ActivityIndicator } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { MOCK_VENUES } from '@/constants/mockData';
+import { Image } from 'expo-image';
+import { useVenue } from '@/hooks/use-venues';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { IconSymbol } from '@/components/ui/icon-symbol';
@@ -12,12 +12,20 @@ export default function VenueDetailsScreen() {
     const colorScheme = useColorScheme();
     const theme = Colors[colorScheme ?? 'light'];
 
-    const venue = MOCK_VENUES.find(v => v.id === id);
+    const { venue, loading, error } = useVenue(id as string);
 
-    if (!venue) {
+    if (loading) {
         return (
-            <View style={styles.errorContainer}>
-                <Text style={{ color: theme.text }}>Venue not found</Text>
+            <View style={[styles.errorContainer, { backgroundColor: theme.background }]}>
+                <ActivityIndicator size="large" color={theme.tint} />
+            </View>
+        );
+    }
+
+    if (error || !venue) {
+        return (
+            <View style={[styles.errorContainer, { backgroundColor: theme.background }]}>
+                <Text style={{ color: theme.text }}>{error || 'Venue not found'}</Text>
                 <Pressable onPress={() => router.back()} style={styles.backBtnError}>
                     <Text style={{ color: theme.tint }}>Go Back</Text>
                 </Pressable>

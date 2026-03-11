@@ -160,3 +160,48 @@ values
   ('ProCourt Badminton', 'Noida Sector 62', '5.2 km', 1500, 4.7, 201,
    array['Badminton', 'Tennis'], 'https://images.unsplash.com/photo-1545809074-59472b3f5ecc?q=80&w=800', 28.6270, 77.3741)
 on conflict do nothing;
+
+-- ─── FUNCTIONS & RPCS ───────────────────────────────────────
+
+-- Join Match: Increment player count
+create or replace function public.increment_match_players(match_id uuid)
+returns void language plpgsql security definer as $$
+begin
+  update public.matches
+  set players_joined = players_joined + 1
+  where id = match_id;
+end;
+$$;
+
+-- Atomic Booking: Create booking and mark slots as unavailable in one go
+create or replace function public.create_booking_atomic(
+  p_user_id uuid,
+  p_venue_id uuid,
+  p_slot_ids uuid[],
+  p_date date,
+  p_total_amount integer
+) returns uuid language plpgsql security definer as $$
+declare
+  v_booking_id uuid;
+begin
+  -- Check if any slots are already booked (extra safety)
+  if exists (
+    select 1 from public.slots 
+    where id = any(p_slot_ids) and is_available = false
+  ) then
+    raise exception 'One or more slots are already booked';
+  end if;
+
+  -- Create the booking
+  insert into public.bookings (user_id, venue_id, slot_ids, date, total_amount)
+  values (p_user_id, p_venue_id, p_slot_ids, p_date, p_total_amount)
+  returning id into v_booking_id;
+
+  -- Mark slots as unavailable
+  update public.slots
+  set is_available = false
+  where id = any(p_slot_ids);
+
+  return v_booking_id;
+end;
+$$;

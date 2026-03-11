@@ -86,5 +86,30 @@ export function useBookings() {
         return true;
     }, [fetchBookings]);
 
-    return { bookings, loading, refresh: fetchBookings, cancelBooking };
+    const createBooking = useCallback(async (bookingData: {
+        venueId: string;
+        slotIds: string[];
+        date: string;
+        totalAmount: number;
+    }) => {
+        if (!user) return { error: 'Not authenticated' };
+
+        const { data, error } = await supabase.rpc('create_booking_atomic', {
+            p_user_id: user.id,
+            p_venue_id: bookingData.venueId,
+            p_slot_ids: bookingData.slotIds,
+            p_date: bookingData.date,
+            p_total_amount: bookingData.totalAmount
+        });
+
+        if (error) {
+            console.error('[createBooking]', error.message);
+            return { error: error.message };
+        }
+
+        await fetchBookings();
+        return { data, error: null };
+    }, [user, fetchBookings]);
+
+    return { bookings, loading, refresh: fetchBookings, cancelBooking, createBooking };
 }

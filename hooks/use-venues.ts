@@ -68,3 +68,41 @@ export function useVenues(sportFilter?: string) {
 
     return { venues, loading, error, refresh: fetchVenues };
 }
+
+export function useVenue(id: string) {
+    const [venue, setVenue] = useState<Venue | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    const fetchVenue = useCallback(async () => {
+        if (!id) return;
+        setLoading(true);
+        setError(null);
+
+        try {
+            const { data, error: dbError } = await supabase
+                .from('venues')
+                .select('*')
+                .eq('id', id)
+                .single();
+
+            if (dbError) {
+                const mock = MOCK_VENUES.find(v => v.id === id);
+                if (mock) setVenue(mock);
+                else setError(dbError.message);
+            } else {
+                setVenue(dbRowToVenue(data as Record<string, unknown>));
+            }
+        } catch (e) {
+            const mock = MOCK_VENUES.find(v => v.id === id);
+            if (mock) setVenue(mock);
+            else setError('Network error');
+        } finally {
+            setLoading(false);
+        }
+    }, [id]);
+
+    useEffect(() => { fetchVenue(); }, [fetchVenue]);
+
+    return { venue, loading, error, refresh: fetchVenue };
+}

@@ -16,38 +16,69 @@ export default function ProfileScreen() {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [errors, setErrors] = useState<Record<string, string>>({});
     const [submitting, setSubmitting] = useState(false);
 
     const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    const handleSubmit = async () => {
-        if (!email.trim() || !password.trim()) {
-            Alert.alert('Validation Error', 'Please enter both email and password.');
-            return;
-        }
-        if (!EMAIL_REGEX.test(email.trim())) {
-            Alert.alert('Validation Error', 'Please enter a valid email address.');
-            return;
-        }
-        if (mode === 'signup' && !name.trim()) {
-            Alert.alert('Validation Error', 'Please enter your name.');
-            return;
-        }
-        if (password.length < 6) {
-            Alert.alert('Validation Error', 'Password must be at least 6 characters.');
-            return;
+    const getFriendlyErrorMessage = (error: string) => {
+        const lower = error.toLowerCase();
+        if (lower.includes('invalid login credentials')) return 'Email or password incorrect.';
+        if (lower.includes('user already registered')) return 'An account with this email already exists.';
+        if (lower.includes('email not confirmed')) return 'Please confirm your email before logging in.';
+        if (lower.includes('rate limit')) return 'Too many attempts. Please try again later.';
+        return error;
+    };
+
+    const validate = () => {
+        const newErrors: Record<string, string> = {};
+        const trimmedEmail = email.trim();
+        const trimmedName = name.trim();
+
+        if (!trimmedEmail) newErrors.email = 'Email is required';
+        else if (!EMAIL_REGEX.test(trimmedEmail)) newErrors.email = 'Invalid email address';
+
+        if (!password) newErrors.password = 'Password is required';
+        else if (password.length < 6) newErrors.password = 'Min 6 characters required';
+
+        if (mode === 'signup') {
+            if (!trimmedName) newErrors.name = 'Full name is required';
+            if (password !== confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
         }
 
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
+    const handleSubmit = async () => {
+        if (!validate()) return;
+
         setSubmitting(true);
+        setErrors({});
+
         try {
             if (mode === 'login') {
                 const { error } = await login(email.trim(), password);
-                if (error) Alert.alert('Login Failed', error);
+                if (error) {
+                    setErrors({ general: getFriendlyErrorMessage(error) });
+                }
             } else {
                 const { error } = await signup(email.trim(), password, name.trim());
-                if (error) Alert.alert('Sign Up Failed', error);
-                else Alert.alert('Account Created! 🎉', 'Check your email to confirm your account before logging in.');
+                if (error) {
+                    setErrors({ general: getFriendlyErrorMessage(error) });
+                } else {
+                    Alert.alert(
+                        'Confirm Email 📧',
+                        'We sent a verification link to your email. Please click it to activate your account.'
+                    );
+                    setMode('login');
+                    setPassword('');
+                    setConfirmPassword('');
+                }
             }
+        } catch (err: any) {
+            setErrors({ general: 'Something went wrong. Please try again.' });
         } finally {
             setSubmitting(false);
         }
@@ -99,33 +130,64 @@ export default function ProfileScreen() {
                     </View>
 
                     <View style={styles.inputContainer}>
-                        {mode === 'signup' && (
-                            <TextInput
-                                style={[styles.input, { color: theme.text, borderColor: theme.icon + '40', backgroundColor: theme.background }]}
-                                placeholder="Full Name"
-                                placeholderTextColor={theme.icon}
-                                value={name}
-                                onChangeText={setName}
-                                autoCapitalize="words"
-                            />
+                        {errors.general && (
+                            <View style={styles.generalError}>
+                                <Text style={styles.errorTextSmall}>{errors.general}</Text>
+                            </View>
                         )}
-                        <TextInput
-                            style={[styles.input, { color: theme.text, borderColor: theme.icon + '40', backgroundColor: theme.background }]}
-                            placeholder="Email Address"
-                            placeholderTextColor={theme.icon}
-                            autoCapitalize="none"
-                            keyboardType="email-address"
-                            value={email}
-                            onChangeText={setEmail}
-                        />
-                        <TextInput
-                            style={[styles.input, { color: theme.text, borderColor: theme.icon + '40', backgroundColor: theme.background }]}
-                            placeholder="Password (min 6 chars)"
-                            placeholderTextColor={theme.icon}
-                            secureTextEntry
-                            value={password}
-                            onChangeText={setPassword}
-                        />
+
+                        {mode === 'signup' && (
+                            <View>
+                                <TextInput
+                                    style={[styles.input, { color: theme.text, borderColor: errors.name ? '#ff4d4f' : theme.icon + '40', backgroundColor: theme.background }]}
+                                    placeholder="Full Name"
+                                    placeholderTextColor={theme.icon}
+                                    value={name}
+                                    onChangeText={(val) => { setName(val); if (errors.name) setErrors(prev => ({ ...prev, name: '' })); }}
+                                    autoCapitalize="words"
+                                />
+                                {errors.name && <Text style={styles.errorTextSmall}>{errors.name}</Text>}
+                            </View>
+                        )}
+
+                        <View>
+                            <TextInput
+                                style={[styles.input, { color: theme.text, borderColor: errors.email ? '#ff4d4f' : theme.icon + '40', backgroundColor: theme.background }]}
+                                placeholder="Email Address"
+                                placeholderTextColor={theme.icon}
+                                autoCapitalize="none"
+                                keyboardType="email-address"
+                                value={email}
+                                onChangeText={(val) => { setEmail(val); if (errors.email) setErrors(prev => ({ ...prev, email: '' })); }}
+                            />
+                            {errors.email && <Text style={styles.errorTextSmall}>{errors.email}</Text>}
+                        </View>
+
+                        <View>
+                            <TextInput
+                                style={[styles.input, { color: theme.text, borderColor: errors.password ? '#ff4d4f' : theme.icon + '40', backgroundColor: theme.background }]}
+                                placeholder="Password (min 6 chars)"
+                                placeholderTextColor={theme.icon}
+                                secureTextEntry
+                                value={password}
+                                onChangeText={(val) => { setPassword(val); if (errors.password) setErrors(prev => ({ ...prev, password: '' })); }}
+                            />
+                            {errors.password && <Text style={styles.errorTextSmall}>{errors.password}</Text>}
+                        </View>
+
+                        {mode === 'signup' && (
+                            <View>
+                                <TextInput
+                                    style={[styles.input, { color: theme.text, borderColor: errors.confirmPassword ? '#ff4d4f' : theme.icon + '40', backgroundColor: theme.background }]}
+                                    placeholder="Confirm Password"
+                                    placeholderTextColor={theme.icon}
+                                    secureTextEntry
+                                    value={confirmPassword}
+                                    onChangeText={(val) => { setConfirmPassword(val); if (errors.confirmPassword) setErrors(prev => ({ ...prev, confirmPassword: '' })); }}
+                                />
+                                {errors.confirmPassword && <Text style={styles.errorTextSmall}>{errors.confirmPassword}</Text>}
+                            </View>
+                        )}
                     </View>
 
                     <Pressable
@@ -351,5 +413,21 @@ const styles = StyleSheet.create({
     menuItemText: {
         fontSize: 16,
         fontWeight: '500',
+    },
+    errorTextSmall: {
+        color: '#ff4d4f',
+        fontSize: 12,
+        marginTop: 4,
+        marginBottom: 8,
+        marginLeft: 4,
+    },
+    generalError: {
+        backgroundColor: '#fff1f0',
+        borderColor: '#ffa39e',
+        borderWidth: 1,
+        borderRadius: 8,
+        padding: 10,
+        marginBottom: 16,
+        width: '100%',
     },
 });
