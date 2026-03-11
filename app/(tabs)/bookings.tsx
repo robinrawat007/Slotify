@@ -1,57 +1,29 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, Pressable, SafeAreaView, Platform, StatusBar, Alert, RefreshControl } from 'react-native';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { MOCK_VENUES } from '@/constants/mockData';
+import { View, Text, StyleSheet, FlatList, Pressable, SafeAreaView, Platform, StatusBar, Alert, RefreshControl, ActivityIndicator } from 'react-native';
+import { useTheme } from '@/hooks/use-theme';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useRouter } from 'expo-router';
 import { useRequireAuth } from '@/hooks/use-require-auth';
-
-// Mock Bookings Data
-const MOCK_BOOKINGS = [
-    {
-        id: 'b1',
-        venue: MOCK_VENUES[0],
-        date: new Date(Date.now() + 86400000).toISOString(),
-        slots: ['06:00 PM', '07:00 PM'],
-        status: 'upcoming', // upcoming, past, cancelled
-        totalAmount: 2400
-    },
-    {
-        id: 'b2',
-        venue: MOCK_VENUES[1],
-        date: new Date(Date.now() - 86400000 * 3).toISOString(),
-        slots: ['06:00 AM'],
-        status: 'past',
-        totalAmount: 800
-    },
-    {
-        id: 'b3',
-        venue: MOCK_VENUES[2],
-        date: new Date(Date.now() - 86400000 * 10).toISOString(),
-        slots: ['07:00 PM'],
-        status: 'cancelled',
-        totalAmount: 1500
-    }
-];
+import { useBookings } from '@/hooks/use-bookings';
+import type { Booking } from '@/constants/types';
 
 type TabType = 'upcoming' | 'past' | 'cancelled';
 
 export default function BookingsScreen() {
-    const colorScheme = useColorScheme();
-    const theme = Colors[colorScheme ?? 'light'];
+    const theme = useTheme();
     const router = useRouter();
     const { user } = useRequireAuth();
+    const { bookings, loading, refresh, cancelBooking } = useBookings();
     const [activeTab, setActiveTab] = useState<TabType>('upcoming');
-    const [bookings, setBookings] = useState(MOCK_BOOKINGS);
     const [refreshing, setRefreshing] = useState(false);
 
     if (!user) return null; // redirect in progress
 
-    const onRefresh = React.useCallback(() => {
+    const onRefresh = React.useCallback(async () => {
         setRefreshing(true);
-        setTimeout(() => setRefreshing(false), 1000);
-    }, []);
+        await refresh();
+        setRefreshing(false);
+    }, [refresh]);
 
     const filteredBookings = bookings.filter(b => b.status === activeTab);
 
@@ -64,17 +36,16 @@ export default function BookingsScreen() {
                 {
                     text: 'Yes, Cancel',
                     style: 'destructive',
-                    onPress: () => {
-                        setBookings(prev => prev.map(b =>
-                            b.id === bookingId ? { ...b, status: 'cancelled' } : b
-                        ));
+                    onPress: async () => {
+                        const success = await cancelBooking(bookingId);
+                        if (!success) Alert.alert('Error', 'Could not cancel booking. Please try again.');
                     }
                 }
             ]
         );
     };
 
-    const renderBookingCard = (booking: typeof MOCK_BOOKINGS[0]) => {
+    const renderBookingCard = (booking: Booking) => {
         const venue = booking.venue;
         const dateObj = new Date(booking.date);
         const dateStr = dateObj.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });

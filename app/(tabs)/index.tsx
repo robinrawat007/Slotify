@@ -1,27 +1,25 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Text, ScrollView, Pressable, SafeAreaView, Platform, StatusBar, FlatList, RefreshControl, Image } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, Pressable, SafeAreaView, Platform, StatusBar, FlatList, RefreshControl, Image, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { CATEGORIES, MOCK_VENUES } from '@/constants/mockData';
+import { useTheme } from '@/hooks/use-theme';
+import { CATEGORIES } from '@/constants/mockData';
 import { VenueCard } from '@/components/VenueCard';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { useVenues } from '@/hooks/use-venues';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme ?? 'light'];
+  const theme = useTheme();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  const { venues, loading, refresh } = useVenues(selectedCategory ?? undefined);
   const [refreshing, setRefreshing] = useState(false);
 
-  const onRefresh = React.useCallback(() => {
+  const onRefresh = React.useCallback(async () => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 1000);
-  }, []);
-
-  const filteredVenues = selectedCategory
-    ? MOCK_VENUES.filter(v => v.sports.includes(selectedCategory))
-    : MOCK_VENUES;
+    await refresh();
+    setRefreshing(false);
+  }, [refresh]);
 
   const renderHeader = () => (
     <>
@@ -101,7 +99,7 @@ export default function HomeScreen() {
       </View>
 
       <FlatList
-        data={filteredVenues}
+        data={venues}
         keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
@@ -113,9 +111,11 @@ export default function HomeScreen() {
           />
         )}
         ListEmptyComponent={
-          <View style={{ padding: 20, alignItems: 'center' }}>
-            <Text style={{ color: theme.icon }}>No venues found for this sport.</Text>
-          </View>
+          loading
+            ? <ActivityIndicator size="large" color={theme.tint} style={{ marginTop: 40 }} />
+            : <View style={{ padding: 20, alignItems: 'center' }}>
+              <Text style={{ color: theme.icon }}>No venues found for this sport.</Text>
+            </View>
         }
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.tint} />

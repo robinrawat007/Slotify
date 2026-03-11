@@ -1,23 +1,28 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, SafeAreaView, Pressable, Image, Platform, StatusBar, RefreshControl } from 'react-native';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
-import { MOCK_MATCHES } from '@/constants/mockData';
+import { View, Text, StyleSheet, FlatList, SafeAreaView, Pressable, Image, Platform, StatusBar, RefreshControl, ActivityIndicator } from 'react-native';
+import { useTheme } from '@/hooks/use-theme';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useRouter } from 'expo-router';
 import type { Match } from '@/constants/types';
+import { useMatches } from '@/hooks/use-matches';
+import { useAuth } from '@/context/AuthContext';
 
 export default function MatchesScreen() {
-    const colorScheme = useColorScheme();
-    const theme = Colors[colorScheme ?? 'light'];
+    const theme = useTheme();
     const router = useRouter();
+    const { user } = useAuth();
+    const { matches, loading, refresh, joinMatch } = useMatches();
     const [activeTab, setActiveTab] = useState<'discover' | 'my_matches'>('discover');
     const [refreshing, setRefreshing] = useState(false);
 
-    const onRefresh = useCallback(() => {
+    const onRefresh = useCallback(async () => {
         setRefreshing(true);
-        setTimeout(() => setRefreshing(false), 1000);
-    }, []);
+        await refresh();
+        setRefreshing(false);
+    }, [refresh]);
+
+    const myMatches = matches.filter(m => m.host?.name === user?.name);
+    const displayMatches = activeTab === 'discover' ? matches : myMatches;
 
     const isFull = (match: Match) => match.playersJoined >= match.maxPlayers;
 
@@ -101,16 +106,20 @@ export default function MatchesScreen() {
             </View>
 
             <FlatList
-                data={activeTab === 'discover' ? MOCK_MATCHES : []}
+                data={displayMatches}
                 keyExtractor={item => item.id}
                 renderItem={renderItem}
                 contentContainerStyle={styles.listContainer}
                 showsVerticalScrollIndicator={false}
                 ListEmptyComponent={
-                    <View style={styles.emptyState}>
-                        <IconSymbol name="person.3.sequence.fill" size={48} color={theme.icon} />
-                        <Text style={{ color: theme.icon, marginTop: 16 }}>You haven&apos;t joined any matches yet</Text>
-                    </View>
+                    loading
+                        ? <ActivityIndicator size="large" color={theme.tint} style={{ marginTop: 40 }} />
+                        : <View style={styles.emptyState}>
+                            <IconSymbol name="person.3.sequence.fill" size={48} color={theme.icon} />
+                            <Text style={{ color: theme.icon, marginTop: 16 }}>
+                                {activeTab === 'discover' ? 'No matches available' : "You haven't joined any matches yet"}
+                            </Text>
+                        </View>
                 }
                 refreshControl={
                     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.tint} />
