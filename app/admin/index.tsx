@@ -4,11 +4,15 @@ import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { useRequireAuth } from '@/hooks/use-require-auth';
 
 export default function AdminDashboardScreen() {
     const router = useRouter();
     const colorScheme = useColorScheme();
     const theme = Colors[colorScheme ?? 'light'];
+    const { user } = useRequireAuth({ adminOnly: true });
+
+    if (!user) return null; // redirect in progress
 
     return (
         <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>

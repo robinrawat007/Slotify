@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { useRequireAuth } from '@/hooks/use-require-auth';
 
 const SPORTS = ['Football', 'Cricket', 'Tennis', 'Badminton'];
 
@@ -11,6 +12,9 @@ export default function CreateMatchScreen() {
     const router = useRouter();
     const colorScheme = useColorScheme();
     const theme = Colors[colorScheme ?? 'light'];
+    const { user } = useRequireAuth();
+
+    if (!user) return null; // redirect in progress
 
     const [title, setTitle] = useState('');
     const [selectedSport, setSelectedSport] = useState('Football');

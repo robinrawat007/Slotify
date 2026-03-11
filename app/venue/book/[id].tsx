@@ -5,6 +5,7 @@ import { MOCK_VENUES } from '@/constants/mockData';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { useRequireAuth } from '@/hooks/use-require-auth';
 
 // Generate some upcoming dates for mockup
 const getUpcomingDates = () => {
@@ -29,11 +30,15 @@ export default function BookSlotScreen() {
     const router = useRouter();
     const colorScheme = useColorScheme();
     const theme = Colors[colorScheme ?? 'light'];
+    const { user } = useRequireAuth();
 
     const venue = MOCK_VENUES.find(v => v.id === id);
     const [dates] = useState(getUpcomingDates());
     const [selectedDate, setSelectedDate] = useState(dates[0].id);
     const [selectedSlots, setSelectedSlots] = useState<string[]>([]);
+
+    if (!user) return null; // redirect in progress
+
 
     if (!venue) {
         return (

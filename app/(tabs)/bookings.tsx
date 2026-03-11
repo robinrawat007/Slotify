@@ -5,6 +5,7 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import { MOCK_VENUES } from '@/constants/mockData';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useRouter } from 'expo-router';
+import { useRequireAuth } from '@/hooks/use-require-auth';
 
 // Mock Bookings Data
 const MOCK_BOOKINGS = [
@@ -40,9 +41,12 @@ export default function BookingsScreen() {
     const colorScheme = useColorScheme();
     const theme = Colors[colorScheme ?? 'light'];
     const router = useRouter();
+    const { user } = useRequireAuth();
     const [activeTab, setActiveTab] = useState<TabType>('upcoming');
     const [bookings, setBookings] = useState(MOCK_BOOKINGS);
     const [refreshing, setRefreshing] = useState(false);
+
+    if (!user) return null; // redirect in progress
 
     const onRefresh = React.useCallback(() => {
         setRefreshing(true);
