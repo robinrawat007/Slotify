@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, Pressable, SafeAreaView, TextInput, Platform, StatusBar, Alert } from 'react-native';
+import { View, Text, StyleSheet, Pressable, SafeAreaView, TextInput, Platform, StatusBar, Alert, ActivityIndicator } from 'react-native';
 import { useTheme } from '@/hooks/use-theme';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useRouter } from 'expo-router';
@@ -9,33 +9,64 @@ import { useAuth } from '@/context/AuthContext';
 export default function ProfileScreen() {
     const theme = useTheme();
     const router = useRouter();
-    const { user, isAuthenticated, isAdmin, login, logout } = useAuth();
+    const { user, isAuthenticated, isAdmin, login, signup, logout, loading: authLoading } = useAuth();
 
-    // Local form state only
+    const [mode, setMode] = useState<'login' | 'signup'>('login');
+    const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [submitting, setSubmitting] = useState(false);
 
-    const handleLogin = () => {
+    const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    const handleSubmit = async () => {
         if (!email.trim() || !password.trim()) {
             Alert.alert('Validation Error', 'Please enter both email and password.');
             return;
         }
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email.trim())) {
+        if (!EMAIL_REGEX.test(email.trim())) {
             Alert.alert('Validation Error', 'Please enter a valid email address.');
             return;
         }
-        const success = login(email.trim(), password);
-        if (!success) {
-            Alert.alert('Login Failed', 'No account found with those credentials. Try admin@slotify.com or user@slotify.com.');
+        if (mode === 'signup' && !name.trim()) {
+            Alert.alert('Validation Error', 'Please enter your name.');
+            return;
+        }
+        if (password.length < 6) {
+            Alert.alert('Validation Error', 'Password must be at least 6 characters.');
+            return;
+        }
+
+        setSubmitting(true);
+        try {
+            if (mode === 'login') {
+                const { error } = await login(email.trim(), password);
+                if (error) Alert.alert('Login Failed', error);
+            } else {
+                const { error } = await signup(email.trim(), password, name.trim());
+                if (error) Alert.alert('Sign Up Failed', error);
+                else Alert.alert('Account Created! 🎉', 'Check your email to confirm your account before logging in.');
+            }
+        } finally {
+            setSubmitting(false);
         }
     };
 
-    const handleLogout = () => {
-        logout();
+    const handleLogout = async () => {
+        await logout();
         setEmail('');
         setPassword('');
+        setName('');
     };
+
+    // Show loading spinner while session is being restored
+    if (authLoading) {
+        return (
+            <View style={[styles.safeArea, { backgroundColor: theme.background, justifyContent: 'center', alignItems: 'center' }]}>
+                <ActivityIndicator size="large" color={theme.tint} />
+            </View>
+        );
+    }
 
     if (!isAuthenticated) {
         return (
@@ -46,25 +77,48 @@ export default function ProfileScreen() {
                         style={{ width: 100, height: 100, marginBottom: 16, resizeMode: 'contain' }}
                     />
                     <Text style={[styles.authTitle, { color: theme.text }]}>Welcome to Slotify</Text>
-                    <Text style={[styles.authSubtitle, { color: theme.icon }]}>Login or Sign up to manage bookings</Text>
+                    <Text style={[styles.authSubtitle, { color: theme.icon }]}>
+                        {mode === 'login' ? 'Login to manage your bookings' : 'Create your account'}
+                    </Text>
+
+                    {/* Mode Toggle */}
+                    <View style={[styles.modeToggle, { backgroundColor: theme.icon + '15' }]}>
+                        {(['login', 'signup'] as const).map(m => (
+                            <Pressable
+                                key={m}
+                                style={[styles.modeBtn, mode === m && { backgroundColor: theme.tint }]}
+                                onPress={() => setMode(m)}
+                            >
+                                <Text style={{ color: mode === m ? '#fff' : theme.icon, fontWeight: '600', fontSize: 14 }}>
+                                    {m === 'login' ? 'Login' : 'Sign Up'}
+                                </Text>
+                            </Pressable>
+                        ))}
+                    </View>
 
                     <View style={styles.inputContainer}>
-                        <View style={{ backgroundColor: theme.tint + '15', padding: 12, borderRadius: 8 }}>
-                            <Text style={{ color: theme.tint, fontSize: 12, fontWeight: 'bold', marginBottom: 4 }}>Demo Credentials:</Text>
-                            <Text style={{ color: theme.text, fontSize: 12 }}>• Admin: admin@slotify.com (Any password)</Text>
-                            <Text style={{ color: theme.text, fontSize: 12 }}>• User: user@slotify.com (Any password)</Text>
-                        </View>
+                        {mode === 'signup' && (
+                            <TextInput
+                                style={[styles.input, { color: theme.text, borderColor: theme.icon + '40', backgroundColor: theme.background }]}
+                                placeholder="Full Name"
+                                placeholderTextColor={theme.icon}
+                                value={name}
+                                onChangeText={setName}
+                                autoCapitalize="words"
+                            />
+                        )}
                         <TextInput
-                            style={[styles.input, { color: theme.text, borderColor: theme.icon + '40' }]}
+                            style={[styles.input, { color: theme.text, borderColor: theme.icon + '40', backgroundColor: theme.background }]}
                             placeholder="Email Address"
                             placeholderTextColor={theme.icon}
                             autoCapitalize="none"
+                            keyboardType="email-address"
                             value={email}
                             onChangeText={setEmail}
                         />
                         <TextInput
-                            style={[styles.input, { color: theme.text, borderColor: theme.icon + '40' }]}
-                            placeholder="Password"
+                            style={[styles.input, { color: theme.text, borderColor: theme.icon + '40', backgroundColor: theme.background }]}
+                            placeholder="Password (min 6 chars)"
                             placeholderTextColor={theme.icon}
                             secureTextEntry
                             value={password}
@@ -72,12 +126,20 @@ export default function ProfileScreen() {
                         />
                     </View>
 
-                    <Pressable style={[styles.primaryBtn, { backgroundColor: theme.tint }]} onPress={handleLogin}>
-                        <Text style={styles.primaryBtnText}>Login / Sign Up</Text>
+                    <Pressable
+                        style={[styles.primaryBtn, { backgroundColor: theme.tint, opacity: submitting ? 0.7 : 1 }]}
+                        onPress={handleSubmit}
+                        disabled={submitting}
+                    >
+                        {submitting
+                            ? <ActivityIndicator color="#fff" />
+                            : <Text style={styles.primaryBtnText}>{mode === 'login' ? 'Login' : 'Create Account'}</Text>
+                        }
                     </Pressable>
                 </View>
             </SafeAreaView>
         );
+
     }
 
     return (
@@ -188,8 +250,21 @@ const styles = StyleSheet.create({
     },
     authSubtitle: {
         fontSize: 16,
-        marginBottom: 32,
+        marginBottom: 24,
         textAlign: 'center',
+    },
+    modeToggle: {
+        flexDirection: 'row',
+        borderRadius: 12,
+        padding: 4,
+        marginBottom: 24,
+        width: '100%',
+    },
+    modeBtn: {
+        flex: 1,
+        paddingVertical: 10,
+        borderRadius: 10,
+        alignItems: 'center',
     },
     inputContainer: {
         width: '100%',
