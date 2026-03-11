@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, View, Text, ScrollView, Pressable, SafeAreaView, Platform, StatusBar, FlatList, RefreshControl } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, Pressable, SafeAreaView, Platform, StatusBar, FlatList, RefreshControl, Image } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -79,9 +79,15 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>
       <View style={styles.header}>
-        <View>
-          <Text style={[styles.greeting, { color: theme.icon }]}>Hello, Player!</Text>
-          <Text style={[styles.title, { color: theme.tint }]}>Slotify</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <Image
+            source={require('@/assets/images/logo.png')}
+            style={{ width: 40, height: 40, marginRight: 10, resizeMode: 'contain' }}
+          />
+          <View>
+            <Text style={[styles.greeting, { color: theme.icon }]}>Hello, Player!</Text>
+            <Text style={[styles.title, { color: theme.tint }]}>Slotify</Text>
+          </View>
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
           <Pressable style={styles.iconBtn} onPress={() => router.push('/notifications')}>
