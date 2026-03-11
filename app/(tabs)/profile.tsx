@@ -1,18 +1,17 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Pressable, SafeAreaView, TextInput, Platform, StatusBar, Alert } from 'react-native';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useTheme } from '@/hooks/use-theme';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useRouter } from 'expo-router';
 import { Image } from 'expo-image';
+import { useAuth } from '@/context/AuthContext';
 
 export default function ProfileScreen() {
-    const colorScheme = useColorScheme();
-    const theme = Colors[colorScheme ?? 'light'];
+    const theme = useTheme();
     const router = useRouter();
+    const { user, isAuthenticated, isAdmin, login, logout } = useAuth();
 
-    // Mock Auth State
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    // Local form state only
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
@@ -26,11 +25,14 @@ export default function ProfileScreen() {
             Alert.alert('Validation Error', 'Please enter a valid email address.');
             return;
         }
-        setIsAuthenticated(true);
+        const success = login(email.trim(), password);
+        if (!success) {
+            Alert.alert('Login Failed', 'No account found with those credentials. Try admin@slotify.com or user@slotify.com.');
+        }
     };
 
     const handleLogout = () => {
-        setIsAuthenticated(false);
+        logout();
         setEmail('');
         setPassword('');
     };

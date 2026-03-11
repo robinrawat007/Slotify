@@ -41,3 +41,14 @@ app-example
 # generated native folders
 /ios
 /android
+
+# debug artifacts (never commit these)
+lint.txt
+lint-report.json
+typescript-errors.txt
+eslint-errors.txt
+*.log
+
+# IDE
+.idea/
+.vscode/settings.json
