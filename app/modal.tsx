@@ -1,17 +1,24 @@
 import { Link } from 'expo-router';
-import { StyleSheet } from 'react-native';
-
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { Colors } from '@/constants/theme';
+import { useRouter } from 'expo-router';
 
 export default function ModalScreen() {
+  const colorScheme = useColorScheme();
+  const theme = Colors[colorScheme ?? 'light'];
+  const router = useRouter();
+
   return (
-    <ThemedView style={styles.container}>
-      <ThemedText type="title">This is a modal</ThemedText>
-      <Link href="/" dismissTo style={styles.link}>
-        <ThemedText type="link">Go to home screen</ThemedText>
-      </Link>
-    </ThemedView>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <Text style={[styles.title, { color: theme.text }]}>Slotify</Text>
+      <Text style={[styles.body, { color: theme.icon }]}>
+        Your go-to app for booking sports venues and joining community matches.
+      </Text>
+      <Pressable onPress={() => router.back()} style={[styles.btn, { backgroundColor: theme.tint }]}>
+        <Text style={styles.btnText}>Close</Text>
+      </Pressable>
+    </View>
   );
 }
 
@@ -20,10 +27,27 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 20,
+    padding: 24,
+    gap: 12,
   },
-  link: {
-    marginTop: 15,
-    paddingVertical: 15,
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+  },
+  body: {
+    fontSize: 16,
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+  btn: {
+    marginTop: 16,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 100,
+  },
+  btnText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 16,
   },
 });

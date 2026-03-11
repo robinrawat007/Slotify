@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, SafeAreaView, Pressable, Image, Platform, StatusBar, RefreshControl } from 'react-native';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { MOCK_MATCHES } from '@/constants/mockData';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useRouter } from 'expo-router';
+import type { Match } from '@/constants/types';
 
 export default function MatchesScreen() {
     const colorScheme = useColorScheme();
@@ -13,56 +14,63 @@ export default function MatchesScreen() {
     const [activeTab, setActiveTab] = useState<'discover' | 'my_matches'>('discover');
     const [refreshing, setRefreshing] = useState(false);
 
-    const onRefresh = React.useCallback(() => {
+    const onRefresh = useCallback(() => {
         setRefreshing(true);
         setTimeout(() => setRefreshing(false), 1000);
     }, []);
 
-    const renderItem = ({ item: match }: any) => (
-        <View style={[styles.matchCard, { backgroundColor: theme.icon + '0A' }]}>
-            <View style={styles.cardHeader}>
-                <View style={[styles.sportTag, { backgroundColor: theme.tint + '15' }]}>
-                    <Text style={[styles.sportTagText, { color: theme.tint }]}>{match.sport}</Text>
+    const isFull = (match: Match) => match.playersJoined >= match.maxPlayers;
+
+    const renderItem = useCallback(({ item: match }: { item: Match }) => {
+        const full = isFull(match);
+        return (
+            <View style={[styles.matchCard, { backgroundColor: theme.icon + '0A', borderColor: theme.icon + '20', borderWidth: 1 }]}>
+                <View style={styles.cardHeader}>
+                    <View style={[styles.sportTag, { backgroundColor: theme.tint + '15' }]}>
+                        <Text style={[styles.sportTagText, { color: theme.tint }]}>{match.sport}</Text>
+                    </View>
+                    <Text style={[styles.priceText, { color: theme.text }]}>₹{match.pricePerPlayer}/player</Text>
                 </View>
-                <Text style={[styles.priceText, { color: theme.text }]}>₹{match.pricePerPlayer}/player</Text>
-            </View>
 
-            <Text style={[styles.matchTitle, { color: theme.text }]}>{match.title}</Text>
+                <Text style={[styles.matchTitle, { color: theme.text }]}>{match.title}</Text>
 
-            <View style={styles.infoRow}>
-                <IconSymbol name="map" size={14} color={theme.icon} />
-                <Text style={[styles.infoText, { color: theme.icon }]}>{match.venueName}</Text>
-            </View>
-            <View style={styles.infoRow}>
-                <IconSymbol name="calendar" size={14} color={theme.icon} />
-                <Text style={[styles.infoText, { color: theme.icon }]}>{match.date} • {match.time}</Text>
-            </View>
+                <View style={styles.infoRow}>
+                    <IconSymbol name="map" size={14} color={theme.icon} />
+                    <Text style={[styles.infoText, { color: theme.icon }]}>{match.venueName}</Text>
+                </View>
+                <View style={styles.infoRow}>
+                    <IconSymbol name="calendar" size={14} color={theme.icon} />
+                    <Text style={[styles.infoText, { color: theme.icon }]}>{match.date} • {match.time}</Text>
+                </View>
 
-            <View style={styles.divider} />
+                <View style={styles.divider} />
 
-            <View style={styles.cardFooter}>
-                <View style={styles.hostInfo}>
-                    <Image source={{ uri: match.host.avatar }} style={styles.avatar} />
-                    <View>
-                        <Text style={[styles.hostName, { color: theme.text }]}>Hosted by {match.host.name}</Text>
-                        <Text style={[styles.skillText, { color: theme.icon }]}>Skill: {match.skillLevel}</Text>
+                <View style={styles.cardFooter}>
+                    <View style={styles.hostInfo}>
+                        <Image source={{ uri: match.host.avatar }} style={styles.avatar} />
+                        <View>
+                            <Text style={[styles.hostName, { color: theme.text }]}>Hosted by {match.host.name}</Text>
+                            <Text style={[styles.skillText, { color: theme.icon }]}>Skill: {match.skillLevel}</Text>
+                        </View>
+                    </View>
+
+                    <View style={styles.joinContainer}>
+                        <Text style={[styles.playersText, { color: full ? '#EF4444' : theme.text }]}>
+                            {match.playersJoined}/{match.maxPlayers} joined
+                        </Text>
+                        <Pressable
+                            style={[styles.joinBtn, { backgroundColor: full ? theme.icon : theme.tint }]}
+                            onPress={() => !full && router.push({ pathname: '/matches/chat/[id]', params: { id: match.id } })}
+                            disabled={full}
+                            accessibilityLabel={full ? 'Match is full' : `Join ${match.title}`}
+                        >
+                            <Text style={styles.joinBtnText}>{full ? 'Full' : 'Join Match'}</Text>
+                        </Pressable>
                     </View>
                 </View>
-
-                <View style={styles.joinContainer}>
-                    <Text style={[styles.playersText, { color: theme.text }]}>
-                        {match.playersJoined}/{match.maxPlayers} joined
-                    </Text>
-                    <Pressable
-                        style={[styles.joinBtn, { backgroundColor: theme.tint }]}
-                        onPress={() => router.push({ pathname: '/matches/chat/[id]', params: { id: match.id } })}
-                    >
-                        <Text style={styles.joinBtnText}>Join Match</Text>
-                    </Pressable>
-                </View>
             </View>
-        </View>
-    );
+        );
+    }, [theme, router]);
 
     return (
         <SafeAreaView style={[styles.safeArea, { backgroundColor: theme.background }]}>

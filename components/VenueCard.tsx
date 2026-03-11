@@ -1,17 +1,21 @@
-import React from 'react';
+import React, { memo, useState } from 'react';
 import { View, Text, StyleSheet, Image, Pressable } from 'react-native';
 import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import type { Venue } from '@/constants/types';
 
 interface VenueCardProps {
-    venue: any;
+    venue: Venue;
     onPress: () => void;
 }
 
-export function VenueCard({ venue, onPress }: VenueCardProps) {
+const PLACEHOLDER_IMAGE = 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?q=80&w=400';
+
+export const VenueCard = memo(function VenueCard({ venue, onPress }: VenueCardProps) {
     const colorScheme = useColorScheme();
     const theme = Colors[colorScheme ?? 'light'];
+    const [imgError, setImgError] = useState(false);
 
     return (
         <Pressable
@@ -21,8 +25,14 @@ export function VenueCard({ venue, onPress }: VenueCardProps) {
                 pressed && { opacity: 0.9 }
             ]}
             onPress={onPress}
+            accessibilityRole="button"
+            accessibilityLabel={`Book ${venue.name}, rated ${venue.rating} stars`}
         >
-            <Image source={{ uri: venue.image }} style={styles.image} />
+            <Image
+                source={{ uri: imgError ? PLACEHOLDER_IMAGE : venue.image }}
+                style={styles.image}
+                onError={() => setImgError(true)}
+            />
             <View style={styles.infoContainer}>
                 <View style={styles.headerRow}>
                     <Text style={[styles.name, { color: theme.text }]} numberOfLines={1}>{venue.name}</Text>
@@ -42,7 +52,7 @@ export function VenueCard({ venue, onPress }: VenueCardProps) {
                 <View style={styles.footerRow}>
                     <Text style={[styles.price, { color: theme.tint }]}>₹{venue.pricePerHour} <Text style={styles.priceUnit}>/ hr</Text></Text>
                     <View style={styles.sportsContainer}>
-                        {venue.sports.map((sport: string) => (
+                        {venue.sports.slice(0, 2).map((sport: string) => (
                             <View key={sport} style={[styles.sportBadge, { backgroundColor: theme.icon + '20' }]}>
                                 <Text style={[styles.sportText, { color: theme.text }]}>{sport}</Text>
                             </View>
@@ -52,7 +62,9 @@ export function VenueCard({ venue, onPress }: VenueCardProps) {
             </View>
         </Pressable>
     );
-}
+});
+
+
 
 const styles = StyleSheet.create({
     card: {
